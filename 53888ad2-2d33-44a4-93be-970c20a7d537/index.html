@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ASCII 与奇偶校验 · 发送和接收</title>
+  <title>ASCII 与奇偶校验收发演示</title>
   <style>
     :root {
       color-scheme: light;
@@ -26,160 +26,163 @@
       color: var(--ink);
       font: 15px/1.55 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
     }
-    main { width: min(960px, calc(100% - 32px)); margin: 40px auto 56px; }
-    header { margin-bottom: 22px; }
-    h1 { margin: 0 0 6px; font-size: clamp(23px, 4vw, 30px); letter-spacing: -.03em; }
-    header p { margin: 0; color: var(--muted); }
+    main { width: min(940px, calc(100% - 32px)); margin: 34px auto 48px; }
+    header { margin-bottom: 18px; }
+    h1 { margin: 0 0 5px; font-size: clamp(23px, 4vw, 30px); letter-spacing: -.03em; }
+    header p, .muted { margin: 0; color: var(--muted); }
     .card {
-      background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 20px;
+      border-radius: 13px;
+      padding: 18px;
+      background: var(--surface);
       box-shadow: 0 5px 18px #20335408;
     }
-    .controls { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; }
-    .field { display: grid; gap: 6px; }
+    .controls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+    .field { display: grid; gap: 5px; }
     label, .label { color: var(--muted); font-size: 13px; font-weight: 650; }
     input, select, button {
-      min-height: 42px;
+      min-height: 40px;
       border: 1px solid #d5deeb;
-      border-radius: 9px;
+      border-radius: 8px;
       background: #fff;
       color: var(--ink);
       font: inherit;
     }
-    input { width: 170px; padding: 8px 11px; }
-    select { padding: 8px 32px 8px 11px; }
-    button { padding: 8px 14px; cursor: pointer; font-weight: 650; }
-    button.primary { border-color: var(--blue); background: var(--blue); color: white; }
-    button:hover { filter: brightness(.97); }
+    input { width: 150px; padding: 7px 10px; }
+    select { padding: 7px 30px 7px 10px; }
+    button { padding: 7px 13px; cursor: pointer; font-weight: 650; }
+    button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
     button:focus-visible, input:focus-visible, select:focus-visible {
-      outline: 3px solid #2864dc40; outline-offset: 2px;
+      outline: 3px solid #2864dc40;
+      outline-offset: 2px;
     }
-    .hint { margin: 13px 0 0; color: var(--muted); font-size: 13px; }
+    .hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
     .error { color: var(--red); }
-    .process-card { margin-top: 14px; }
-    .process-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .process-heading h2 { margin: 0; font-size: 16px; }
-    .process-state { color: var(--muted); font-size: 13px; }
-    .process-steps {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-      margin: 16px 0 14px; padding: 0; list-style: none;
+    .process { margin-top: 12px; }
+    .process-head { display: flex; justify-content: space-between; gap: 12px; }
+    .process-head h2 { margin: 0; font-size: 15px; }
+    .process-state { color: var(--muted); font-size: 12px; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 13px 0;
+      padding: 0;
+      list-style: none;
     }
-    .process-step {
-      display: flex; align-items: center; gap: 8px; min-width: 0;
-      color: var(--muted); font-size: 13px;
+    .steps li { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .step-dot {
+      display: grid;
+      flex: 0 0 24px;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #f0f3f8;
+      color: #718097;
     }
-    .process-step .step {
-      flex: 0 0 26px; background: #f0f3f8; color: #718097;
-    }
-    .process-step.active { color: var(--blue); font-weight: 700; }
-    .process-step.active .step { background: var(--blue); color: white; }
-    .process-step.done { color: var(--green); }
-    .process-step.done .step { background: var(--green-soft); color: var(--green); }
+    .steps .active { color: var(--blue); font-weight: 700; }
+    .steps .active .step-dot { background: var(--blue); color: #fff; }
+    .steps .done { color: var(--green); }
+    .steps .done .step-dot { background: var(--green-soft); color: var(--green); }
     .wire {
-      display: grid; grid-template-columns: auto minmax(80px, 1fr) auto;
-      align-items: center; gap: 12px; padding: 11px 13px;
-      border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe;
+      display: grid;
+      grid-template-columns: auto minmax(70px, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fbfcfe;
     }
     .endpoint { color: var(--muted); font-size: 12px; white-space: nowrap; }
-    .wire-track {
-      position: relative; height: 28px; border-bottom: 2px dashed #cdd7e5;
-    }
+    .wire-track { position: relative; height: 27px; border-bottom: 2px dashed #cdd7e5; }
     .wire-bit {
-      position: absolute; top: 0; left: 0; display: grid; place-items: center;
-      width: 28px; height: 25px; border: 1px solid #abc2ff; border-radius: 7px;
-      background: var(--blue-soft); color: var(--blue);
-      font: 700 14px ui-monospace, SFMono-Regular, Consolas, monospace;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 24px;
+      border: 1px solid #abc2ff;
+      border-radius: 7px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font: 700 14px ui-monospace, Consolas, monospace;
       opacity: 0;
     }
     .wire-bit.moving { opacity: 1; }
-    .process-note { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
-    .process-math {
-      display: grid; gap: 10px; margin-top: 14px; padding: 13px;
-      border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe;
+    .wire-note { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+    .flow { display: grid; gap: 12px; margin-top: 12px; }
+    .section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 16px; }
+    .section-num {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
     }
-    .math-expression { font-size: 14px; font-weight: 700; }
-    .weight-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-    .weight-cell {
-      padding: 7px 3px; border: 1px solid var(--line); border-radius: 7px;
-      color: var(--muted); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
-      text-align: center;
-    }
-    .weight-cell.active { border-color: #abc2ff; background: var(--blue-soft); color: var(--blue); }
-    .count-line, .parity-equation { color: var(--muted); font-size: 13px; }
-    .parity-equation { color: var(--ink); font-weight: 650; }
-    .bit.active { outline: 3px solid #2864dc55; outline-offset: 2px; transform: translateY(-2px); }
-    .section-title { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; font-size: 17px; }
-    .step {
-      display: inline-grid; place-items: center; width: 25px; height: 25px;
-      border-radius: 50%; background: var(--blue-soft); color: var(--blue); font-size: 13px;
-    }
-    .flow { display: grid; gap: 14px; margin-top: 16px; }
-    .flow-grid { display: grid; grid-template-columns: 1fr 36px 1fr; align-items: center; gap: 12px; }
-    .arrow { color: #97a5b8; text-align: center; font-size: 23px; }
-    .panel { border: 1px solid var(--line); border-radius: 11px; padding: 15px; min-width: 0; }
-    .panel h3 { margin: 0 0 12px; font-size: 15px; }
-    .meta { display: flex; gap: 8px 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
-    .meta strong { color: var(--ink); font-weight: 650; }
-    .bits { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .flow-grid { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: center; gap: 10px; }
+    .arrow { color: #97a5b8; text-align: center; font-size: 21px; }
+    .panel { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 10px; }
+    .panel h3 { margin: 0 0 9px; font-size: 14px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; }
+    .meta strong { color: var(--ink); }
+    .bits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+    .bit-wrap { display: grid; }
     .bit {
-      display: grid; place-items: center; width: 38px; height: 42px;
-      border: 1px solid #d8e1ee; border-radius: 8px; background: #f9fbff;
-      font: 700 19px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 39px;
+      border: 1px solid #d8e1ee;
+      border-radius: 7px;
+      background: #f9fbff;
+      font: 700 18px/1 ui-monospace, Consolas, monospace;
     }
     .bit.parity { border-color: #abc2ff; background: var(--blue-soft); color: var(--blue); }
     .bit.changed { border-color: #f1a2a0; background: var(--red-soft); color: var(--red); }
-    .bit-index { margin-top: 4px; color: var(--muted); font: 11px ui-monospace, monospace; text-align: center; }
-    .bit-wrap { display: grid; }
-    .caption { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
-    .status {
-      margin-top: 12px; border-radius: 9px; padding: 10px 12px;
-      background: var(--green-soft); color: var(--green); font-weight: 650;
-    }
+    .bit-index { margin-top: 3px; color: var(--muted); font: 10px ui-monospace, monospace; text-align: center; }
+    .caption { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+    .status { margin-top: 10px; padding: 9px 10px; border-radius: 8px; background: var(--green-soft); color: var(--green); font-weight: 650; }
     .status.bad { background: var(--red-soft); color: var(--red); }
-    .error-control { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
-    .error-control select { min-height: 36px; font-size: 13px; }
-    .error-control button { min-height: 36px; padding: 5px 10px; font-size: 13px; }
-    .legend { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 15px; color: var(--muted); font-size: 12px; }
-    .legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .swatch { width: 12px; height: 12px; border: 1px solid #d8e1ee; border-radius: 3px; background: #f9fbff; }
-    .swatch.p { border-color: #abc2ff; background: var(--blue-soft); }
-    .swatch.e { border-color: #f1a2a0; background: var(--red-soft); }
-    .explain { margin-top: 16px; }
-    .explain p { margin: 5px 0; color: var(--muted); }
+    .status.waiting { background: #f0f3f8; color: var(--muted); }
+    .error-control { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .error-control select, .error-control button { min-height: 34px; font-size: 12px; }
+    .error-control button { padding: 5px 9px; }
+    .explain { margin-top: 12px; }
+    .explain p { margin: 4px 0; color: var(--muted); font-size: 13px; }
     .explain strong { color: var(--ink); }
-    footer { margin-top: 14px; color: var(--muted); font-size: 12px; text-align: center; }
-    @media (max-width: 650px) {
-      main { margin-top: 24px; }
-      .card { padding: 16px; }
-      .flow-grid { grid-template-columns: 1fr; gap: 8px; }
-      .arrow { transform: rotate(90deg); font-size: 20px; }
-      input { width: 145px; }
-      .process-steps { grid-template-columns: repeat(2, 1fr); row-gap: 12px; }
+    footer { margin-top: 12px; color: var(--muted); font-size: 11px; text-align: center; }
+    @media (max-width: 620px) {
+      main { margin-top: 22px; }
+      .card { padding: 14px; }
+      .flow-grid { grid-template-columns: 1fr; gap: 7px; }
+      .arrow { transform: rotate(90deg); font-size: 18px; line-height: 1; }
+      .steps { grid-template-columns: repeat(2, 1fr); row-gap: 10px; }
     }
     @media (prefers-reduced-motion: no-preference) {
       .wire-bit.moving { transition: left 180ms linear; }
-      .bit { transition: transform 160ms ease, outline-color 160ms ease; }
-    }
-    @media (max-width: 420px) {
-      .weight-row { gap: 3px; }
-      .weight-cell { font-size: 10px; }
     }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>ASCII 与奇偶校验</h1>
-      <p>看一个字符怎样变成比特、通过线路，再由接收端检查。</p>
+      <h1>ASCII 编码与奇偶校验收发演示</h1>
+      <p>从字符编码、加校验位到逐位传输和接收检查，一眼看懂数据如何发送与接收。</p>
     </header>
 
     <section class="card" aria-label="演示设置">
       <div class="controls">
         <div class="field">
-          <label for="charInput">输入一个 ASCII 字符</label>
-          <input id="charInput" value="A" maxlength="2" aria-describedby="inputHint">
+          <label for="charInput">ASCII 字符</label>
+          <input id="charInput" type="text" value="A" maxlength="2" autocomplete="off">
         </div>
         <div class="field">
           <label for="parityMode">校验方式</label>
@@ -190,106 +193,90 @@
         </div>
         <button class="primary" id="sendButton" type="button">发送并接收</button>
       </div>
-      <p class="hint" id="inputHint">使用 7 位 ASCII（0–127）；每次演示一个字符。</p>
+      <p class="hint">输入一个 ASCII 字符（编码范围 0–127）。示例：A = 65 = 1000001。</p>
       <p class="hint error" id="inputError" role="alert" hidden></p>
     </section>
 
-    <section class="card process-card" aria-labelledby="processTitle">
-      <div class="process-heading">
-        <h2 id="processTitle">传输动态</h2>
-        <span class="process-state" id="processState" role="status" aria-live="polite">等待发送</span>
+    <section class="card process" aria-labelledby="processTitle">
+      <div class="process-head">
+        <h2 id="processTitle">传输过程</h2>
+        <span class="process-state" id="processState">等待发送</span>
       </div>
-      <ol class="process-steps" aria-label="传输步骤">
-        <li class="process-step" data-process-step="0"><span class="step">1</span>字符编码</li>
-        <li class="process-step" data-process-step="1"><span class="step">2</span>生成校验位</li>
-        <li class="process-step" data-process-step="2"><span class="step">3</span>逐位传输</li>
-        <li class="process-step" data-process-step="3"><span class="step">4</span>接收检查</li>
+      <ol class="steps" aria-label="传输步骤">
+        <li data-process-step="0"><span class="step-dot">1</span>字符编码</li>
+        <li data-process-step="1"><span class="step-dot">2</span>生成校验位</li>
+        <li data-process-step="2"><span class="step-dot">3</span>逐位传输</li>
+        <li data-process-step="3"><span class="step-dot">4</span>接收检查</li>
       </ol>
       <div class="wire" aria-label="发送端到接收端的传输线路">
         <span class="endpoint">发送端</span>
-        <div class="wire-track" id="wireTrack">
-          <span class="wire-bit" id="wireBit" aria-hidden="true">1</span>
-        </div>
+        <div class="wire-track" id="wireTrack"><span class="wire-bit" id="wireBit" aria-hidden="true">1</span></div>
         <span class="endpoint">接收端</span>
       </div>
-      <div class="process-math" aria-live="polite">
-        <div class="math-expression" id="mathExpression">等待开始：ASCII 十进制数将转换为 7 位二进制。</div>
-        <div class="weight-row" id="weightRow" aria-label="每个二进制位对应的位权"></div>
-        <div class="count-line" id="countLine">逐位统计 1 的个数，用于计算校验位。</div>
-        <div class="parity-equation" id="parityEquation">校验位将在下一步生成。</div>
-      </div>
-      <p class="process-note" id="processNote">点击“发送并接收”，观察 8 个比特依次通过线路。</p>
+      <p class="wire-note" id="processNote">点击“发送并接收”，观察 8 个比特依次通过线路。</p>
     </section>
 
     <div class="flow">
       <section class="card" aria-labelledby="sendTitle">
-        <h2 class="section-title" id="sendTitle"><span class="step">1</span>发送端：编码并加校验位</h2>
+        <h2 class="section-title" id="sendTitle"><span class="section-num">1</span>发送端：编码并添加校验位</h2>
         <div class="flow-grid">
           <article class="panel">
             <h3>字符 → ASCII 数据</h3>
             <div class="meta">
               <span>字符：<strong id="charShown">A</strong></span>
               <span>十进制：<strong id="decimalShown">65</strong></span>
+              <span>1 的数量：<strong id="dataOnes">2</strong></span>
             </div>
             <div class="bits" id="dataBits" aria-label="7 位 ASCII 数据"></div>
-            <p class="caption">7 位数据，从最高位到最低位（bit 6 → bit 0）</p>
+            <p class="caption">7 位数据，从最高位 b6 到最低位 b0</p>
           </article>
           <div class="arrow" aria-hidden="true">→</div>
           <article class="panel">
-            <h3>加上校验位后发送</h3>
-            <div class="meta"><span>校验：<strong id="modeShown">偶校验</strong></span></div>
-            <div class="bits" id="sendBits" aria-label="发送的 8 位数据"></div>
-            <p class="caption">数据位 + 校验位（最右）；整个帧满足所选奇偶性</p>
+            <h3>组成 8 位发送帧</h3>
+            <div class="meta"><span>校验方式：<strong id="modeShown">偶校验</strong></span><span>校验位 P：<strong id="parityShown">0</strong></span></div>
+            <div class="bits" id="sendBits" aria-label="发送的 8 位数据帧"></div>
+            <p class="caption">数据位 b6…b0 + 校验位 P（最右）</p>
           </article>
         </div>
       </section>
 
       <section class="card" aria-labelledby="receiveTitle">
-        <h2 class="section-title" id="receiveTitle"><span class="step">2</span>接收端：检查收到的比特</h2>
+        <h2 class="section-title" id="receiveTitle"><span class="section-num">2</span>接收端：检查收到的数据帧</h2>
         <div class="flow-grid">
           <article class="panel">
             <h3>线路上收到</h3>
-            <div class="meta"><span>收到的帧：<strong id="receivedSummary">8 位</strong></span></div>
-            <div class="bits" id="receivedBits" aria-label="接收到的 8 位数据"></div>
+            <div class="meta"><span>收到的 1：<strong id="onesCount">2</strong></span></div>
+            <div class="bits" id="receivedBits" aria-label="接收到的 8 位数据帧"></div>
             <div class="error-control">
-              <label class="label" for="flipBit">模拟翻转</label>
+              <label class="label" for="flipBit">模拟错误</label>
               <select id="flipBit" aria-label="选择要翻转的数据位">
                 <option value="none">不翻转</option>
-                <option value="0">bit 6</option><option value="1">bit 5</option>
-                <option value="2">bit 4</option><option value="3">bit 3</option>
-                <option value="4">bit 2</option><option value="5">bit 1</option>
-                <option value="6">bit 0</option><option value="7">校验位</option>
+                <option value="0">b6</option><option value="1">b5</option>
+                <option value="2">b4</option><option value="3">b3</option>
+                <option value="4">b2</option><option value="5">b1</option>
+                <option value="6">b0</option><option value="7">校验位 P</option>
               </select>
-              <button id="flipButton" type="button">翻转所选位</button>
+              <button id="flipButton" type="button" disabled>翻转所选位</button>
               <button id="resetButton" type="button">清除错误</button>
             </div>
           </article>
           <div class="arrow" aria-hidden="true">→</div>
           <article class="panel">
             <h3>奇偶性检查</h3>
-            <div class="meta">
-              <span>收到的 1：<strong id="onesCount">2</strong></span>
-              <span>应为：<strong id="expectedParity">偶数个</strong></span>
-            </div>
-            <div class="status" id="checkStatus" role="status" aria-live="polite">通过：奇偶性正确，未检测到错误。</div>
-            <p class="caption" id="decodeCaption">接收端按原校验规则检查整帧。</p>
+            <div class="meta"><span>要求整帧为：<strong id="expectedParity">偶数个 1</strong></span></div>
+            <div class="status" id="checkStatus" role="status" aria-live="polite">通过：奇偶性正确。</div>
+            <p class="caption" id="decodeCaption">检查通过后，去掉校验位可还原 ASCII 字符。</p>
           </article>
-        </div>
-        <div class="legend" aria-label="颜色说明">
-          <span><i class="swatch" aria-hidden="true"></i>ASCII 数据位</span>
-          <span><i class="swatch p" aria-hidden="true"></i>校验位</span>
-          <span><i class="swatch e" aria-hidden="true"></i>被翻转的位</span>
         </div>
       </section>
     </div>
 
-    <section class="card explain">
-      <h2 class="section-title"><span class="step">?</span>怎么理解</h2>
-      <p><strong>ASCII：</strong>字符映射为数字，再写成 7 位二进制。例如 A = 65 = 1000001。</p>
-      <p><strong>偶校验：</strong>选择校验位，让整帧中 1 的总数为偶数；奇校验则让总数为奇数。</p>
-      <p><strong>注意：</strong>奇偶校验能发现奇数个位翻转，但无法发现偶数个位同时翻转，也不能定位或修复错误。</p>
+    <section class="card explain" aria-labelledby="explainTitle">
+      <h2 class="section-title" id="explainTitle"><span class="section-num">?</span>原理与限制</h2>
+      <p><strong>偶校验：</strong>选择 P，使整帧中 1 的总数为偶数；奇校验则使总数为奇数。</p>
+      <p><strong>能力：</strong>能检测奇数个位翻转；不能定位或修复错误，偶数个位同时翻转也可能漏检。</p>
     </section>
-    <footer>轻量演示 · 7 位 ASCII + 1 位奇偶校验</footer>
+    <footer>轻量演示 · 7 位 ASCII 数据 + 1 位奇偶校验</footer>
   </main>
   <script>
     const charInput = document.querySelector("#charInput");
@@ -297,19 +284,19 @@
     const inputError = document.querySelector("#inputError");
     const flipBit = document.querySelector("#flipBit");
     const flipButton = document.querySelector("#flipButton");
+    const resetButton = document.querySelector("#resetButton");
     let sentFrame = [];
     let receivedFrame = [];
-    let changedIndex = -1;
     let animationRun = 0;
+    let isTransmitting = false;
 
-    function renderBits(container, bits, changedIndex = -1, activeIndex = -1) {
+    function renderBits(container, bits, changedIndex = -1) {
       container.replaceChildren();
       bits.forEach((bit, index) => {
         const wrap = document.createElement("div");
         wrap.className = "bit-wrap";
         const cell = document.createElement("div");
-        cell.className = "bit" + (index === 7 ? " parity" : "") +
-          (index === changedIndex ? " changed" : "") + (index === activeIndex ? " active" : "");
+        cell.className = "bit" + (index === 7 ? " parity" : "") + (index === changedIndex ? " changed" : "");
         cell.textContent = bit === null ? "·" : String(bit);
         const label = document.createElement("div");
         label.className = "bit-index";
@@ -321,57 +308,77 @@
 
     function resetProcess() {
       animationRun += 1;
+      isTransmitting = false;
       document.querySelector("#processState").textContent = "等待发送";
       document.querySelector("#processNote").textContent = "点击“发送并接收”，观察 8 个比特依次通过线路。";
-      document.querySelectorAll("[data-process-step]").forEach(step => {
-        step.classList.remove("active", "done");
-      });
+      document.querySelectorAll("[data-process-step]").forEach(step => step.classList.remove("active", "done"));
       document.querySelector("#wireBit").classList.remove("moving");
-      flipBit.disabled = false;
-      document.querySelector("#resetButton").disabled = false;
-      flipButton.disabled = flipBit.value === "none";
-      document.querySelector("#mathExpression").textContent = "等待开始：ASCII 十进制数将转换为 7 位二进制。";
-      document.querySelector("#weightRow").replaceChildren();
-      document.querySelector("#countLine").textContent = "逐位统计 1 的个数，用于计算校验位。";
-      document.querySelector("#parityEquation").textContent = "校验位将在下一步生成。";
-    }
-
-    function setProcessStep(index, message) {
-      document.querySelectorAll("[data-process-step]").forEach((step, stepIndex) => {
-        step.classList.toggle("active", stepIndex === index);
-        step.classList.toggle("done", stepIndex < index);
-      });
-      document.querySelector("#processState").textContent = message;
     }
 
     function render() {
       resetProcess();
       const chars = Array.from(charInput.value);
-      if (chars.length !== 1 || chars[0].codePointAt(0) > 127) {
+      const code = chars.length === 1 ? chars[0].codePointAt(0) : -1;
+      if (code < 0 || code > 127) {
         inputError.hidden = false;
         inputError.textContent = "请输入一个 ASCII 字符（编码范围 0–127）。";
+        document.querySelector("#sendButton").disabled = true;
+        resetButton.disabled = true;
+        flipButton.disabled = true;
+        sentFrame = [];
+        receivedFrame = [];
+        renderBits(document.querySelector("#dataBits"), []);
+        renderBits(document.querySelector("#sendBits"), []);
+        renderBits(document.querySelector("#receivedBits"), []);
+        document.querySelector("#charShown").textContent = "—";
+        document.querySelector("#decimalShown").textContent = "—";
+        document.querySelector("#dataOnes").textContent = "—";
+        document.querySelector("#parityShown").textContent = "—";
+        document.querySelector("#onesCount").textContent = "—";
+        const status = document.querySelector("#checkStatus");
+        status.classList.remove("bad");
+        status.classList.add("waiting");
+        status.textContent = "等待有效 ASCII 字符。";
+        document.querySelector("#decodeCaption").textContent = "请输入一个编码范围为 0–127 的字符后再演示。";
+        flipBit.value = "none";
         return;
       }
-      inputError.hidden = true;
 
-      const code = chars[0].codePointAt(0);
+      inputError.hidden = true;
+      document.querySelector("#sendButton").disabled = false;
+      resetButton.disabled = false;
       const data = code.toString(2).padStart(7, "0").split("").map(Number);
       const ones = data.reduce((sum, bit) => sum + bit, 0);
       const parity = parityMode.value === "even" ? ones % 2 : 1 - (ones % 2);
       sentFrame = [...data, parity];
+      receivedFrame = sentFrame.slice();
 
-      document.querySelector("#charShown").textContent = chars[0];
+      const charLabel = code < 32 ? `控制字符 (${code})` : code === 127 ? "DEL (127)" : chars[0];
+      document.querySelector("#charShown").textContent = charLabel;
       document.querySelector("#decimalShown").textContent = String(code);
+      document.querySelector("#dataOnes").textContent = String(ones);
       document.querySelector("#modeShown").textContent = parityMode.value === "even" ? "偶校验" : "奇校验";
+      document.querySelector("#parityShown").textContent = String(parity);
+      document.querySelector("#expectedParity").textContent = parityMode.value === "even" ? "偶数个 1" : "奇数个 1";
       renderBits(document.querySelector("#dataBits"), data);
       renderBits(document.querySelector("#sendBits"), sentFrame);
-
-      changedIndex = -1;
       flipBit.value = "none";
       flipButton.disabled = true;
-      receivedFrame = sentFrame.slice();
-      updateReceiver(changedIndex);
-      return true;
+      updateReceiver();
+    }
+
+    function updateReceiver(changedIndex = -1) {
+      renderBits(document.querySelector("#receivedBits"), receivedFrame, changedIndex);
+      const count = receivedFrame.reduce((sum, bit) => sum + bit, 0);
+      const valid = parityMode.value === "even" ? count % 2 === 0 : count % 2 === 1;
+      document.querySelector("#onesCount").textContent = String(count);
+      const status = document.querySelector("#checkStatus");
+      status.classList.remove("waiting");
+      status.classList.toggle("bad", !valid);
+      status.textContent = valid ? "通过：奇偶性正确，未检测到错误。" : "未通过：奇偶性不符，检测到传输错误。";
+      document.querySelector("#decodeCaption").textContent = valid
+        ? `校验通过；去掉 P 后为 ASCII ${sentFrame.slice(0, 7).join("")}（十进制 ${Number.parseInt(sentFrame.slice(0, 7).join(""), 2)}）。通过不代表一定没有错误。`
+        : "校验失败说明数据帧可能发生变化，但无法指出是哪一位出错。";
     }
 
     function wait(milliseconds) {
@@ -379,136 +386,71 @@
     }
 
     async function animateTransmission() {
-      if (!render()) return;
-      const run = animationRun;
-      flipBit.disabled = true;
-      flipButton.disabled = true;
-      document.querySelector("#resetButton").disabled = true;
+      const run = ++animationRun;
+      const processSteps = [...document.querySelectorAll("[data-process-step]")];
+      const processState = document.querySelector("#processState");
       const processNote = document.querySelector("#processNote");
-      const mathExpression = document.querySelector("#mathExpression");
-      const countLine = document.querySelector("#countLine");
-      const parityEquation = document.querySelector("#parityEquation");
-      setProcessStep(0, "正在编码");
-      const code = charInput.value.codePointAt(0);
-      const dataBits = sentFrame.slice(0, 7);
-      const weightRow = document.querySelector("#weightRow");
-      weightRow.replaceChildren();
-      const weightCells = dataBits.map((bit, index) => {
-        const weight = 2 ** (6 - index);
-        const cell = document.createElement("div");
-        cell.className = "weight-cell";
-        cell.textContent = `b${6 - index} · ${weight}\n${bit} × ${weight} = ${bit * weight}`;
-        weightRow.append(cell);
-        return cell;
-      });
-      mathExpression.textContent = `${charInput.value} → ASCII ${code} → ${dataBits.join("")}₂`;
-      processNote.textContent = "二进制每一位都有位权；从最高位 b6 开始逐位展开。";
-      let ones = 0;
-      for (let index = 0; index < dataBits.length; index += 1) {
-        if (run !== animationRun) return;
-        weightCells[index].classList.add("active");
-        renderBits(document.querySelector("#dataBits"), dataBits, -1, index);
-        ones += dataBits[index];
-        countLine.textContent = `检查 b${6 - index}：${dataBits[index]} × ${2 ** (6 - index)} = ${dataBits[index] * (2 ** (6 - index))}；目前共有 ${ones} 个 1。`;
-        await wait(450);
-        if (run !== animationRun) return;
-      }
-      renderBits(document.querySelector("#dataBits"), dataBits);
-      const expanded = dataBits
-        .map((bit, index) => bit ? String(2 ** (6 - index)) : null)
-        .filter(value => value !== null);
-      mathExpression.textContent = `${dataBits.join("")}₂ = ${expanded.length ? expanded.join(" + ") : "0"} = ${code}`;
-      countLine.textContent = `统计完成：${ones} 个 1，${ones % 2 === 0 ? "偶数" : "奇数"}。`;
-
-      setProcessStep(1, "正在生成校验位");
-      const targetOnesRemainder = parityMode.value === "even" ? 0 : 1;
-      parityEquation.textContent = `${parityMode.value === "even" ? "偶校验" : "奇校验"}：${ones} + P 要成为${targetOnesRemainder === 0 ? "偶数" : "奇数"}，所以 P = ${sentFrame[7]}（${ones} + ${sentFrame[7]} = ${ones + sentFrame[7]}）。`;
-      processNote.textContent = `数据位已有 ${ones} 个 1；选择校验位 ${sentFrame[7]}，使整帧符合${parityMode.value === "even" ? "偶" : "奇"}校验。`;
-      await wait(1100);
-      if (run !== animationRun) return;
-
-      setProcessStep(2, "正在逐位传输");
-      receivedFrame = Array(sentFrame.length).fill(null);
-      renderBits(document.querySelector("#receivedBits"), receivedFrame);
       const wireTrack = document.querySelector("#wireTrack");
       const wireBit = document.querySelector("#wireBit");
-      wireBit.style.left = "0px";
+
+      processSteps[0].classList.add("done");
+      processSteps[1].classList.add("done");
+      processSteps[2].classList.add("active");
+      processState.textContent = "正在逐位传输";
+      receivedFrame = Array(sentFrame.length).fill(null);
+      renderBits(document.querySelector("#receivedBits"), receivedFrame);
+      flipButton.disabled = true;
+      const status = document.querySelector("#checkStatus");
+      status.classList.remove("bad");
+      status.classList.add("waiting");
+      status.textContent = "等待收齐 8 位数据帧后检查。";
+      document.querySelector("#decodeCaption").textContent = "接收端正在逐位收集数据。";
+      isTransmitting = true;
       wireBit.classList.add("moving");
+
       for (let index = 0; index < sentFrame.length; index += 1) {
         if (run !== animationRun) return;
-        renderBits(document.querySelector("#sendBits"), sentFrame, -1, index);
         wireBit.textContent = String(sentFrame[index]);
         wireBit.style.left = "0px";
         void wireBit.offsetWidth;
         wireBit.style.left = `${Math.max(0, wireTrack.clientWidth - wireBit.offsetWidth)}px`;
-        processNote.textContent = `发送第 ${index + 1}/8 位：${index === 7 ? "校验位 P" : `数据位 b${6 - index}`} = ${sentFrame[index]}。`;
-        await wait(420);
+        await wait(210);
         if (run !== animationRun) return;
         receivedFrame[index] = sentFrame[index];
-        renderBits(document.querySelector("#receivedBits"), receivedFrame, -1, index);
-        document.querySelector("#receivedSummary").textContent = `已收到 ${index + 1}/8 位`;
-        document.querySelector("#onesCount").textContent = String(receivedFrame.reduce((sum, bit) => sum + (bit || 0), 0));
-        document.querySelector("#checkStatus").textContent = "接收中：等待完整数据帧后检查。";
-        document.querySelector("#decodeCaption").textContent = "比特逐个到达；全部 8 位收齐后才进行奇偶校验。";
+        renderBits(document.querySelector("#receivedBits"), receivedFrame);
+        processNote.textContent = `已接收第 ${index + 1}/8 位（${index === 7 ? "校验位 P" : `b${6 - index}`}）：${sentFrame[index]}`;
       }
 
-      renderBits(document.querySelector("#sendBits"), sentFrame);
-      setProcessStep(3, "正在检查奇偶性");
-      processNote.textContent = "8 位全部到达，接收端开始统计 1 的总数并与校验规则比较。";
-      let receivedOnes = 0;
-      for (let index = 0; index < receivedFrame.length; index += 1) {
-        if (run !== animationRun) return;
-        renderBits(document.querySelector("#receivedBits"), receivedFrame, -1, index);
-        receivedOnes += receivedFrame[index];
-        countLine.textContent = `复核 bit ${index === 7 ? "P" : 6 - index} = ${receivedFrame[index]}：目前统计到 ${receivedOnes} 个 1。`;
-        processNote.textContent = `接收端逐位复核：第 ${index + 1}/8 位，共 ${receivedOnes} 个 1。`;
-        await wait(260);
-        if (run !== animationRun) return;
-      }
+      wireBit.classList.remove("moving");
+      processSteps[2].classList.remove("active");
+      processSteps[2].classList.add("done");
+      processSteps[3].classList.add("active");
+      processState.textContent = "正在检查奇偶性";
+      await wait(250);
+      if (run !== animationRun) return;
       updateReceiver();
-      parityEquation.textContent = `检查结果：共 ${receivedOnes} 个 1，${parityMode.value === "even" ? "要求偶数" : "要求奇数"}，${parityMode.value === "even" ? (receivedOnes % 2 === 0 ? "符合" : "不符合") : (receivedOnes % 2 === 1 ? "符合" : "不符合")}。`;
-      document.querySelectorAll("[data-process-step]").forEach(step => {
-        step.classList.remove("active");
-        step.classList.add("done");
-      });
-      document.querySelector("#processState").textContent = "接收完成";
+      processSteps[3].classList.remove("active");
+      processSteps[3].classList.add("done");
+      processState.textContent = "接收完成";
       processNote.textContent = document.querySelector("#checkStatus").textContent;
-      flipBit.disabled = false;
-      document.querySelector("#resetButton").disabled = false;
+      isTransmitting = false;
       flipButton.disabled = flipBit.value === "none";
-    }
-
-    function updateReceiver(changedIndex = -1) {
-      renderBits(document.querySelector("#receivedBits"), receivedFrame, changedIndex);
-      const count = receivedFrame.reduce((sum, bit) => sum + bit, 0);
-      const valid = parityMode.value === "even" ? count % 2 === 0 : count % 2 === 1;
-      document.querySelector("#receivedSummary").textContent = `${receivedFrame.length} 位`;
-      document.querySelector("#onesCount").textContent = String(count);
-      document.querySelector("#expectedParity").textContent = parityMode.value === "even" ? "偶数个" : "奇数个";
-      const status = document.querySelector("#checkStatus");
-      status.classList.toggle("bad", !valid);
-      status.textContent = valid
-        ? "通过：奇偶性正确，未检测到错误。"
-        : "未通过：奇偶性不符，检测到传输错误。";
-      document.querySelector("#decodeCaption").textContent = valid
-        ? "接收端按原校验规则检查整帧。校验通过不代表一定没有错误。"
-        : "校验失败说明比特发生了可检测的变化，但无法指出是哪一位。";
     }
 
     document.querySelector("#sendButton").addEventListener("click", animateTransmission);
     charInput.addEventListener("input", render);
     parityMode.addEventListener("change", render);
     flipBit.addEventListener("change", () => {
-      flipButton.disabled = flipBit.value === "none";
+      flipButton.disabled = isTransmitting || flipBit.value === "none";
     });
     flipButton.addEventListener("click", () => {
-      changedIndex = Number(flipBit.value);
+      const index = Number(flipBit.value);
       receivedFrame = sentFrame.slice();
-      receivedFrame[changedIndex] ^= 1;
-      updateReceiver(changedIndex);
+      receivedFrame[index] ^= 1;
+      updateReceiver(index);
     });
-    document.querySelector("#resetButton").addEventListener("click", () => {
-      changedIndex = -1;
+    resetButton.addEventListener("click", () => {
+      resetProcess();
       flipBit.value = "none";
       flipButton.disabled = true;
       receivedFrame = sentFrame.slice();
