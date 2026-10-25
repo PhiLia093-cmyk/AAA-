@@ -95,6 +95,21 @@
     }
     .wire-bit.moving { opacity: 1; }
     .process-note { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    .process-math {
+      display: grid; gap: 10px; margin-top: 14px; padding: 13px;
+      border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe;
+    }
+    .math-expression { font-size: 14px; font-weight: 700; }
+    .weight-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+    .weight-cell {
+      padding: 7px 3px; border: 1px solid var(--line); border-radius: 7px;
+      color: var(--muted); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+      text-align: center;
+    }
+    .weight-cell.active { border-color: #abc2ff; background: var(--blue-soft); color: var(--blue); }
+    .count-line, .parity-equation { color: var(--muted); font-size: 13px; }
+    .parity-equation { color: var(--ink); font-weight: 650; }
+    .bit.active { outline: 3px solid #2864dc55; outline-offset: 2px; transform: translateY(-2px); }
     .section-title { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; font-size: 17px; }
     .step {
       display: inline-grid; place-items: center; width: 25px; height: 25px;
@@ -145,6 +160,11 @@
     }
     @media (prefers-reduced-motion: no-preference) {
       .wire-bit.moving { transition: left 180ms linear; }
+      .bit { transition: transform 160ms ease, outline-color 160ms ease; }
+    }
+    @media (max-width: 420px) {
+      .weight-row { gap: 3px; }
+      .weight-cell { font-size: 10px; }
     }
   </style>
 </head>
@@ -191,6 +211,12 @@
           <span class="wire-bit" id="wireBit" aria-hidden="true">1</span>
         </div>
         <span class="endpoint">接收端</span>
+      </div>
+      <div class="process-math" aria-live="polite">
+        <div class="math-expression" id="mathExpression">等待开始：ASCII 十进制数将转换为 7 位二进制。</div>
+        <div class="weight-row" id="weightRow" aria-label="每个二进制位对应的位权"></div>
+        <div class="count-line" id="countLine">逐位统计 1 的个数，用于计算校验位。</div>
+        <div class="parity-equation" id="parityEquation">校验位将在下一步生成。</div>
       </div>
       <p class="process-note" id="processNote">点击“发送并接收”，观察 8 个比特依次通过线路。</p>
     </section>
@@ -276,13 +302,14 @@
     let changedIndex = -1;
     let animationRun = 0;
 
-    function renderBits(container, bits, changedIndex = -1) {
+    function renderBits(container, bits, changedIndex = -1, activeIndex = -1) {
       container.replaceChildren();
       bits.forEach((bit, index) => {
         const wrap = document.createElement("div");
         wrap.className = "bit-wrap";
         const cell = document.createElement("div");
-        cell.className = "bit" + (index === 7 ? " parity" : "") + (index === changedIndex ? " changed" : "");
+        cell.className = "bit" + (index === 7 ? " parity" : "") +
+          (index === changedIndex ? " changed" : "") + (index === activeIndex ? " active" : "");
         cell.textContent = bit === null ? "·" : String(bit);
         const label = document.createElement("div");
         label.className = "bit-index";
@@ -300,6 +327,13 @@
         step.classList.remove("active", "done");
       });
       document.querySelector("#wireBit").classList.remove("moving");
+      flipBit.disabled = false;
+      document.querySelector("#resetButton").disabled = false;
+      flipButton.disabled = flipBit.value === "none";
+      document.querySelector("#mathExpression").textContent = "等待开始：ASCII 十进制数将转换为 7 位二进制。";
+      document.querySelector("#weightRow").replaceChildren();
+      document.querySelector("#countLine").textContent = "逐位统计 1 的个数，用于计算校验位。";
+      document.querySelector("#parityEquation").textContent = "校验位将在下一步生成。";
     }
 
     function setProcessStep(index, message) {
@@ -347,15 +381,50 @@
     async function animateTransmission() {
       if (!render()) return;
       const run = animationRun;
+      flipBit.disabled = true;
+      flipButton.disabled = true;
+      document.querySelector("#resetButton").disabled = true;
       const processNote = document.querySelector("#processNote");
+      const mathExpression = document.querySelector("#mathExpression");
+      const countLine = document.querySelector("#countLine");
+      const parityEquation = document.querySelector("#parityEquation");
       setProcessStep(0, "正在编码");
-      processNote.textContent = `字符“${charInput.value}”转换为 7 位 ASCII：${sentFrame.slice(0, 7).join("")}。`;
-      await wait(550);
-      if (run !== animationRun) return;
+      const code = charInput.value.codePointAt(0);
+      const dataBits = sentFrame.slice(0, 7);
+      const weightRow = document.querySelector("#weightRow");
+      weightRow.replaceChildren();
+      const weightCells = dataBits.map((bit, index) => {
+        const weight = 2 ** (6 - index);
+        const cell = document.createElement("div");
+        cell.className = "weight-cell";
+        cell.textContent = `b${6 - index} · ${weight}\n${bit} × ${weight} = ${bit * weight}`;
+        weightRow.append(cell);
+        return cell;
+      });
+      mathExpression.textContent = `${charInput.value} → ASCII ${code} → ${dataBits.join("")}₂`;
+      processNote.textContent = "二进制每一位都有位权；从最高位 b6 开始逐位展开。";
+      let ones = 0;
+      for (let index = 0; index < dataBits.length; index += 1) {
+        if (run !== animationRun) return;
+        weightCells[index].classList.add("active");
+        renderBits(document.querySelector("#dataBits"), dataBits, -1, index);
+        ones += dataBits[index];
+        countLine.textContent = `检查 b${6 - index}：${dataBits[index]} × ${2 ** (6 - index)} = ${dataBits[index] * (2 ** (6 - index))}；目前共有 ${ones} 个 1。`;
+        await wait(450);
+        if (run !== animationRun) return;
+      }
+      renderBits(document.querySelector("#dataBits"), dataBits);
+      const expanded = dataBits
+        .map((bit, index) => bit ? String(2 ** (6 - index)) : null)
+        .filter(value => value !== null);
+      mathExpression.textContent = `${dataBits.join("")}₂ = ${expanded.length ? expanded.join(" + ") : "0"} = ${code}`;
+      countLine.textContent = `统计完成：${ones} 个 1，${ones % 2 === 0 ? "偶数" : "奇数"}。`;
 
       setProcessStep(1, "正在生成校验位");
-      processNote.textContent = `${parityMode.value === "even" ? "偶校验" : "奇校验"}：数据中有 ${sentFrame.slice(0, 7).reduce((sum, bit) => sum + bit, 0)} 个 1，校验位为 ${sentFrame[7]}。`;
-      await wait(550);
+      const targetOnesRemainder = parityMode.value === "even" ? 0 : 1;
+      parityEquation.textContent = `${parityMode.value === "even" ? "偶校验" : "奇校验"}：${ones} + P 要成为${targetOnesRemainder === 0 ? "偶数" : "奇数"}，所以 P = ${sentFrame[7]}（${ones} + ${sentFrame[7]} = ${ones + sentFrame[7]}）。`;
+      processNote.textContent = `数据位已有 ${ones} 个 1；选择校验位 ${sentFrame[7]}，使整帧符合${parityMode.value === "even" ? "偶" : "奇"}校验。`;
+      await wait(1100);
       if (run !== animationRun) return;
 
       setProcessStep(2, "正在逐位传输");
@@ -367,27 +436,46 @@
       wireBit.classList.add("moving");
       for (let index = 0; index < sentFrame.length; index += 1) {
         if (run !== animationRun) return;
+        renderBits(document.querySelector("#sendBits"), sentFrame, -1, index);
         wireBit.textContent = String(sentFrame[index]);
         wireBit.style.left = "0px";
         void wireBit.offsetWidth;
         wireBit.style.left = `${Math.max(0, wireTrack.clientWidth - wireBit.offsetWidth)}px`;
-        await wait(210);
+        processNote.textContent = `发送第 ${index + 1}/8 位：${index === 7 ? "校验位 P" : `数据位 b${6 - index}`} = ${sentFrame[index]}。`;
+        await wait(420);
         if (run !== animationRun) return;
         receivedFrame[index] = sentFrame[index];
-        renderBits(document.querySelector("#receivedBits"), receivedFrame);
-        processNote.textContent = `正在传输第 ${index + 1}/8 位（${index === 7 ? "校验位" : `bit ${6 - index}`}）：${sentFrame[index]}。`;
+        renderBits(document.querySelector("#receivedBits"), receivedFrame, -1, index);
+        document.querySelector("#receivedSummary").textContent = `已收到 ${index + 1}/8 位`;
+        document.querySelector("#onesCount").textContent = String(receivedFrame.reduce((sum, bit) => sum + (bit || 0), 0));
+        document.querySelector("#checkStatus").textContent = "接收中：等待完整数据帧后检查。";
+        document.querySelector("#decodeCaption").textContent = "比特逐个到达；全部 8 位收齐后才进行奇偶校验。";
       }
 
+      renderBits(document.querySelector("#sendBits"), sentFrame);
       setProcessStep(3, "正在检查奇偶性");
-      await wait(350);
-      if (run !== animationRun) return;
+      processNote.textContent = "8 位全部到达，接收端开始统计 1 的总数并与校验规则比较。";
+      let receivedOnes = 0;
+      for (let index = 0; index < receivedFrame.length; index += 1) {
+        if (run !== animationRun) return;
+        renderBits(document.querySelector("#receivedBits"), receivedFrame, -1, index);
+        receivedOnes += receivedFrame[index];
+        countLine.textContent = `复核 bit ${index === 7 ? "P" : 6 - index} = ${receivedFrame[index]}：目前统计到 ${receivedOnes} 个 1。`;
+        processNote.textContent = `接收端逐位复核：第 ${index + 1}/8 位，共 ${receivedOnes} 个 1。`;
+        await wait(260);
+        if (run !== animationRun) return;
+      }
       updateReceiver();
+      parityEquation.textContent = `检查结果：共 ${receivedOnes} 个 1，${parityMode.value === "even" ? "要求偶数" : "要求奇数"}，${parityMode.value === "even" ? (receivedOnes % 2 === 0 ? "符合" : "不符合") : (receivedOnes % 2 === 1 ? "符合" : "不符合")}。`;
       document.querySelectorAll("[data-process-step]").forEach(step => {
         step.classList.remove("active");
         step.classList.add("done");
       });
       document.querySelector("#processState").textContent = "接收完成";
       processNote.textContent = document.querySelector("#checkStatus").textContent;
+      flipBit.disabled = false;
+      document.querySelector("#resetButton").disabled = false;
+      flipButton.disabled = flipBit.value === "none";
     }
 
     function updateReceiver(changedIndex = -1) {
